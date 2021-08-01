@@ -1,0 +1,6 @@
+---
+- name: import network 
+  import_tasks: manage_network.yml
+
+- name: import network 
+  import_tasks: manage_server.yml

@@ -1,0 +1,27 @@
+- name: Create a basic network
+  hcloud_network:
+    api_token: "{{ lookup('env','HCLOUD_TOKEN') | default(hetzner_token, true) }}"
+    name: "{{ hetzner_network_name }}"
+    ip_range: "{{ hetzner_network }}"
+    state: "{{ hetzner_network_state }}"
+  register: server_network
+
+- name: Create a basic subnetwork
+  hcloud_subnetwork:
+    api_token: "{{ lookup('env','HCLOUD_TOKEN') | default(hetzner_token, true) }}"
+    network: "{{ hetzner_network_name }}"
+    ip_range: "{{ hetzner_network }}"
+    network_zone: eu-central
+    type: cloud
+    state: "{{ hetzner_network_state }}"
+  when: server_network.hcloud_network.id is defined
+
+- name: Create a basic IPv4 Floating IP
+  hcloud_floating_ip:
+    api_token: "{{ lookup('env','HCLOUD_TOKEN') | default(hetzner_token, true) }}"
+    name: floating-ip
+    home_location: fsn1
+    type: ipv4
+    state: "{{ hetzner_floating_state }}"
+ 
+
