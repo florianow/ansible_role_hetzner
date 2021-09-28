@@ -1,16 +1,16 @@
-# Hetzner 
+# Hetzner
 hetzner_instance_type: 'cx11'
-hetzner_token: 
+hetzner_token:
 hetzner_ssh_keys: name_your_key
 hetzner_worker_count: 1
 hetzner_master_count: 1
-hetzner_instance_os: 'ubuntu-20.04'
+hetzner_instance_os: 'centos-8'
 hetzner_network_name: hcloud_server_network
 hetzner_network: 10.10.0.0/24
 node_name: kub-no
 master_name: kub-ma
 key_name: "{{ hetzner_ssh_keys }}"
-pub_key: 
+pub_key:
 # states
 hetzner_state: absent
 hetzner_server_state: "{{ hetzner_state }}"

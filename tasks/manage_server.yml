@@ -1,6 +1,6 @@
 ---
 - name: Create a basic ssh_key
-  hcloud_ssh_key:
+  hetzner.hcloud.hcloud_ssh_key:
     api_token: "{{ lookup('env','HCLOUD_TOKEN') | default(hetzner_token, true) }}"
     name: "{{ key_name }}"
     public_key: "{{ pub_key }}"
@@ -30,29 +30,48 @@
   set_fact:
     masternames: "{{ masternames.results | map(attribute='msg') | list }}"
 
-- name: execute hcloud deployment
+- name: execute hcloud deployment master
   module_defaults:
-    hcloud_server:
+    hetzner.hcloud.hcloud_server:
       api_token: "{{ lookup('env','HCLOUD_TOKEN') | default(hetzner_token, true) }}"
       image: "{{ hetzner_instance_os }}"
       server_type: "{{ hetzner_instance_type }}"
-      #datacenter: "{{ hetzner_datacenter }}"
+      labels:
+        master: ""
       ssh_keys: "{{ hetzner_ssh_keys }}"
       state: "{{ hetzner_server_state }}"
   block:
-    - loop: "{{ masternames + workernames }}"
-      hcloud_server:
+    - loop: "{{ masternames }}"
+      hetzner.hcloud.hcloud_server:
         name: "{{ item }}"
-      register: hcloud_server
+      register: hcloud_server_master
+
+- name: execute hcloud deployment worker
+  module_defaults:
+    hetzner.hcloud.hcloud_server:
+      api_token: "{{ lookup('env','HCLOUD_TOKEN') | default(hetzner_token, true) }}"
+      image: "{{ hetzner_instance_os }}"
+      server_type: "{{ hetzner_instance_type }}"
+      labels:
+        worker: ""
+      ssh_keys: "{{ hetzner_ssh_keys }}"
+      state: "{{ hetzner_server_state }}"
+  block:
+    - loop: "{{ workernames }}"
+      hetzner.hcloud.hcloud_server:
+        name: "{{ item }}"
+      register: hcloud_server_worker
 
 - name: execute hcloud server network
   module_defaults:
-    hcloud_server_network:
+    hetzner.hcloud.hcloud_server_network:
       api_token: "{{ lookup('env','HCLOUD_TOKEN') | default(hetzner_token, true) }}"
       network: "{{ hetzner_network_name }}"
       state: "{{ hetzner_server_state }}"
   block:
     - loop: "{{ masternames + workernames }}"
-      hcloud_server_network:
+      hetzner.hcloud.hcloud_server_network:
         server: "{{ item }}"
-  when: hcloud_server.results[0].hcloud_server.status is defined
+  when:
+    - ( hcloud_server_master.results[0].hcloud_server.status is defined ) or
+      ( hcloud_server_worker.results[0].hcloud_server.status is defined )
