@@ -30,20 +30,35 @@
   set_fact:
     masternames: "{{ masternames.results | map(attribute='msg') | list }}"
 
+#- name: build list of etcd
+#  debug:
+#    msg: "etcd{{ item }}"
+#  loop: "{{ range(0, hetzner_master_count)|list }}"
+#  register: etcdcount
+
+#- name: set master list fact
+#  set_fact:
+#    etcdcount: "{{ etcdcount.results | map(attribute='msg') | list }}"
+
 - name: execute hcloud deployment master
   module_defaults:
     hetzner.hcloud.hcloud_server:
       api_token: "{{ lookup('env','HCLOUD_TOKEN') | default(hetzner_token, true) }}"
       image: "{{ hetzner_instance_os }}"
-      server_type: "{{ hetzner_instance_type }}"
-      labels:
-        master: ""
+      server_type: "{{ hetzner_instance_type_m }}"
+      #labels:
+      #  master: ""
       ssh_keys: "{{ hetzner_ssh_keys }}"
       state: "{{ hetzner_server_state }}"
   block:
-    - loop: "{{ masternames }}"
+    - with_together:
+       - "{{ masternames }}"
+       #- "{{ etcdcount }}"
       hetzner.hcloud.hcloud_server:
-        name: "{{ item }}"
+        name: "{{ item.0 }}"
+        labels:
+          master: ""
+          #etcd: "{{ item.1 }}"
       register: hcloud_server_master
 
 - name: execute hcloud deployment worker
@@ -51,7 +66,7 @@
     hetzner.hcloud.hcloud_server:
       api_token: "{{ lookup('env','HCLOUD_TOKEN') | default(hetzner_token, true) }}"
       image: "{{ hetzner_instance_os }}"
-      server_type: "{{ hetzner_instance_type }}"
+      server_type: "{{ hetzner_instance_type_w }}"
       labels:
         worker: ""
       ssh_keys: "{{ hetzner_ssh_keys }}"

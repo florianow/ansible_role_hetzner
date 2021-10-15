@@ -25,6 +25,7 @@
     #  floatingtest: ""
     type: ipv4
     state: "{{ hetzner_floating_state }}"
+    force: yes
 
 - name: Gather hcloud Floating ip infos
   hetzner.hcloud.hcloud_floating_ip_info:
